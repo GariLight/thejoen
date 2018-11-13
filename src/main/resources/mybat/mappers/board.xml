@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd"
+>
+
+<mapper namespace="boardMM">
+
+	<sql id="serchIf">
+	<where>
+		<if test="serch != null">	
+				title LIKE concat('%',#{serch},'%')
+		</if>
+		<if test="cntType != null">
+			<![CDATA[ cnt ${cntType} #{cnt} ]]> 
+		</if>
+		
+	</where>
+	</sql>
+
+	<select id="list" resultType="boardDTO" parameterType="boardDTO">
+		SELECT *
+		FROM BOARD
+		<include refid="serchIf" />
+		ORDER BY id desc;
+	</select>
+	
+	<insert id="insertOne" parameterType="boardDTO">
+		INSERT INTO board(
+			pname
+			, pw
+			, title
+			, content
+			, upfile
+		)VALUES(
+			#{pname}
+			, #{pw}
+			, #{title}
+			, #{content}
+			, #{upfile}
+		)
+		
+		<selectKey order="AFTER" keyProperty="id" resultType="java.lang.Integer">
+			select max(id)
+			from board
+		</selectKey>
+	</insert>
+	
+	<select id="selectDetail" resultType="boardDTO" parameterType="Integer">
+		SELECT *
+		FROM board
+		WHERE 
+			id = #{id}
+	</select>
+	
+	<update id="addCount" parameterType="boardDTO">
+		UPDATE board
+		SET 
+			cnt = cnt+1
+		WHERE
+			id = #{id}
+	</update>
+	
+	<delete id="delDetail" parameterType="boardDTO">
+		DELETE FROM board
+		WHERE 
+			id = #{id}
+			and pw = #{pw}
+	</delete>
+	
+	<update id="modify" parameterType="boardDTO">
+		update board
+		set 
+		title = #{title} 
+		, pname = #{pname}
+		, content = #{content}
+		where id = #{id} and pw =#{pw}
+	</update>
+	
+	<insert id="insertList" parameterType="listDTO">
+		insert into board(cnt, pname, pw, title, content)
+		values
+		<foreach collection="mem" item="buf" separator=",">
+		(0, #{buf.pname}, #{buf.pw}, #{buf.title}, #{buf.content})
+		</foreach>
+	</insert>
+	
+	<!-- insert를 multi로 입력할 경우 하나만 실패해도 전부 실행불가
+	<insert id="insertError" parameterType="listDTO">
+		insert into board(id, pw, title, cnt, content)
+		values
+		<foreach collection="mem" item="buf" separator=",">
+		(#{buf.id}, '111', #{buf.title}, 0, ' ')
+		</foreach>
+	</insert> -->
+	
+	<insert id="insertError" parameterType="boardDTO">
+	
+		insert into board(id, pw, title, cnt, content)
+		value
+		(#{id}, '111', #{title}, 0, ' ');
+	
+	</insert>
+	
+</mapper>
